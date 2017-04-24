@@ -17,7 +17,8 @@ def mkdf(filename):
     table = data.map(lambda r: Row(sta=r[0], date=r[1], meas=r[2],
                                    degc=int(r[3]), m=r[4], q=r[5], s=r[6],
                                    time=r[7]))
-    return sqlc.createDataFrame(table)
+    df = sqlc.createDataFrame(table)
+    return df.filter(df.q=='')  # prune measurements w/ quality problems
 
 
 def mkstations(filename):
@@ -64,21 +65,23 @@ def run():
     """
 
     stations = mkstations('data/stations.csv')
-    stations.drop('begints', 'elev', 'iem_network') # station_name, stid
 
-    for year in range(2000,2017):
-        df = mkdf(str(year) + '.csv')
+    for col in ['begints', 'elev', 'iem_network']: # station_name, stid
+        stations = stations.drop(col)
 
-        print("%s\n====\n\n" % year)
+    for year in range(2000,2001): #17):
+        df = mkdf('data/%s.csv' % str(year))
 
-        # join with 'stations' and reject data w/ any kind of quality problems
-        df = df.filter(df.q=='').join(stations, df.sta==stations.stid)
+        print("\n%s\n====\n" % year)
+
+        # join with 'stations' table (adds lat, lon, station_name, stid)
+        df = df.join(stations, df.sta==stations.stid)
 
         # Average minimum temperature
-        print(df.filter(df.meas=='TMIN').groupBy().mean('degc').collect())
+        avgmin = df.filter(df.meas=='TMIN').groupBy().mean('degc').collect()[0]
 
         # Average maximum temperature
-        print(df.filter(df.meas=='TMAX').groupBy().mean('degc').collect())
+        avgmax = df.filter(df.meas=='TMAX').groupBy().mean('degc').collect()[0]
 
 
 if __name__ == '__main__':
