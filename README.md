@@ -120,6 +120,6 @@ Hottest station was USR0000HKAU (Kula, HI 96790) on 13 Feb 2015: 55.6 deg C
 
 
 
-ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/
-ttps://www.osc.edu/
- https://www.osc.edu/resources/technical_support/supercomputers/owens
+[^fn1]: ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/
+[osc]: https://www.osc.edu/
+[owens]: https://www.osc.edu/resources/technical_support/supercomputers/owens
