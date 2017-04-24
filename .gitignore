@@ -2,6 +2,7 @@
 *~
 data
 derby.log
+ipython_log.py
 metastore_db/
 
 #### joe made this: http://goel.io/joe

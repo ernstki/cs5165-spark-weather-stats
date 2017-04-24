@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+from __future__ import print_function
 from pyspark import SparkContext
 from pyspark.sql import SQLContext, Row
 
-
 sc = SparkContext.getOrCreate() #appName='weatherStats')
 sqlc = SQLContext(sc)
+
+include_years = range(2000, 2017)  # all data from 2000-2016
 
 
 def mkdf(filename):
@@ -32,9 +34,7 @@ def mkstations(filename):
     """
     raw = sc.textFile(filename)
     data = raw.map(lambda x: x.split(','))
-    table = data.map(lambda r: Row(stid=r[0], station_name=r[1], lat=r[2],
-                                   lon=r[3], elev=r[4], begints=r[5],
-                                   iem_network=r[6]))
+    table = data.map(lambda r: Row(stid=r[0], lat=r[1], lon=r[2]))
     return sqlc.createDataFrame(table)
 
 
@@ -49,60 +49,63 @@ def getcity(stations, sta, raw_json=False):
 
     s = stations.filter(stations.stid==sta).first()
     if not s:
-        raise RuntimeError("Station '%s' not found" % sta)
+        # raise RuntimeError("Station '%s' not found" % sta)
+        return '<not found>'
 
     response = urlopen('%s&latlng=%s,%s' % (baseurl, s.lat, s.lon))
     raw = response.read()
     json = json.loads(raw)
 
+    # FIXME: check status in returned JSON for error(s)
     if raw_json:
         return json
     else:
         # this is sketchy, but it basically (hopefully) discards everything but
         # city, state (ZIP), and country
         a = json['results'][0]['formatted_address']
-        return ', '.join(a.split(', ')[-3:])
+        return ', '.join(a.split(', ')[-3:-1])
 
 
 def run():
     """
-    Run analyses
+    Run analyses on individual years, then over the entire dataset
     """
     import pyspark.sql.functions as sqlf
 
-    stations = mkstations('data/stations.csv')
+    stations = mkstations('data/ghcnd-stations.csv')
 
     for col in ['begints', 'elev', 'iem_network']: # station_name, stid
         stations = stations.drop(col)
 
-    for year in range(2000,2001): #17):
+    for year in include_years:
         df = mkdf('data/%s.csv' % str(year))
 
         print("\n%s\n====\n" % year)
 
         # Average minimum temperature
-        # r = df.filter(df.meas=='TMIN').groupBy().avg('degc').first()
-        # print('Avg min temp = %0.1f deg C' % (r['avg(degc)'] / 10.0))
+        r = df.filter(df.meas=='TMIN').groupBy().avg('degc').first()
+        print('Avg min temp = %0.1f deg C' % (r['avg(degc)'] / 10.0))
 
         # Average maximum temperature
-        # r = df.filter(df.meas=='TMAX').groupBy().avg('degc').first()
-        # print('Avg max temp = %0.1f deg C' % (r['avg(degc)'] / 10.0))
+        r = df.filter(df.meas=='TMAX').groupBy().avg('degc').first()
+        print('Avg max temp = %0.1f deg C' % (r['avg(degc)'] / 10.0))
 
         # Five hottest stations (on average)
         # join with 'stations' table (adds lat, lon, station_name, stid)
-        # fivehot = df.filter(df.meas=='TMAX') \
-        #             .groupBy(df.sta) \
-        #             .agg(sqlf.avg('degc')) \
-        #             .join(stations, df.sta==stations.stid) \
-        #             .sort(sqlf.desc('avg(degc)')) \
-        #             .limit(5).collect()
+        fivehot = df.filter(df.meas=='TMAX') \
+                    .groupBy(df.sta) \
+                    .agg(sqlf.avg('degc')) \
+                    .join(stations, df.sta==stations.stid) \
+                    .sort(sqlf.desc('avg(degc)')) \
+                    .limit(5).collect()
 
-        # i = 1
-        # for s in fivehot:
-        #     t = float(s['avg(degc)']) / 10.0
-        #     print('Hottest station #%s: %s (%s) - %0.1f deg C'
-        #           % (i, s.sta, getcity(stations,s.sta), t))
-        #     i = i + 1
+        print()
+        i = 1
+        for s in fivehot:
+            t = float(s['avg(degc)']) / 10.0
+            print('Hottest station #%s: %s (%s) - %0.1f deg C'
+                  % (i, s.sta, getcity(stations,s.sta), t))
+            i = i + 1
 
         # Five coldest stations (on average)
         fivecold = df.filter(df.meas=='TMIN') \
@@ -112,6 +115,7 @@ def run():
                      .sort(sqlf.asc('avg(degc)')) \
                      .limit(5).collect()
 
+        print()
         i = 1
         for s in fivecold:
             t = float(s['avg(degc)']) / 10.0
@@ -119,8 +123,32 @@ def run():
                   % (i, s.sta, getcity(stations,s.sta), t))
             i = i + 1
 
-        # Hottest and coldest day and corresponding weather stations in the
-        # entire dataset
+    # Hottest and coldest day and corresponding weather stations in the
+    # entire dataset
+    print("\nEntire dataset (2000-2016)\n==========================\n")
+    print('  * Loading all datasets into a single DataFrame...')
+    df = mkdf('data/20??.csv')
+
+    print('  * Computing coldest station for entire dataset...\n')
+    coldest = df.filter(df.meas=='TMIN').groupBy('sta', 'date').min('degc') \
+                .sort(sqlf.asc('min(degc)')).first()
+
+    date = dt.strptime(coldest.date, '%Y%m%d').strftime('%d %b %Y')
+    city = getcity(stations, coldest.sta)
+
+    print('Coldest station was %s (%s) on %s: %0.1f deg C'
+          % (coldest.sta, city, date, float(coldest['min(degc)']) / 10.0))
+
+    # and now the hottest
+    print('\n  * Computing hottest station for entire dataset...\n')
+    hottest = df.filter(df.meas=='TMAX').groupBy('sta', 'date').max('degc') \
+                .sort(sqlf.desc('max(degc)')).first()
+
+    date = dt.strptime(hottest.date, '%Y%m%d').strftime('%d %b %Y')
+    city = getcity(stations, hottest.sta)
+
+    print('Hottest station was %s (%s) on %s: %0.1f deg C'
+          % (hottest.sta, city, date, float(hottest['max(degc)']) / 10.0))
 
 
 if __name__ == '__main__':
