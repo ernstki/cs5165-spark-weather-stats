@@ -1,16 +1,16 @@
 # Project 2 (FINAL) : BigData Analysis Project - Weather
 
-Due: April 24 2017 @ 11:55pm
+**Due**: April 24 2017 @ 11:55pm
 
 This project will have you perform Data Analysis and processing using
-MapReduce / Apache Spark. The Project will use the weather dataset from
+MapReduce / Apache Spark. The project will use the weather dataset from
 <https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/by_year/>. This project will
 use only 16 years of data (2000 - 2016) for all the stations starting with US
 and elements TMAX, TMIN. 
 
 ## Creation of datasets
 
-For the Global Historical Climatology Network (GHCN) weather data:[^fn1]
+For the Global Historical Climatology Network (GHCN) [weather data][ghcn]:
 
 ```bash
 mkdir data  # if it doesn't exist
@@ -119,7 +119,6 @@ Hottest station was USR0000HKAU (Kula, HI 96790) on 13 Feb 2015: 55.6 deg C
 ```
 
 
-
-[^fn1]: ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/
+[ghcn]: ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/
 [osc]: https://www.osc.edu/
 [owens]: https://www.osc.edu/resources/technical_support/supercomputers/owens
