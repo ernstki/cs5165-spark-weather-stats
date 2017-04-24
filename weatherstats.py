@@ -68,7 +68,7 @@ def getcity(stations, sta, raw_json=False):
 
 def run():
     """
-    Run analyses on individual years, then over the entire dataset
+    Run analyses on individual years in sequence
     """
     import pyspark.sql.functions as sqlf
 
@@ -122,6 +122,16 @@ def run():
             print('Coldest station #%s: %s (%s) - %0.1f deg C'
                   % (i, s.sta, getcity(stations,s.sta), t))
             i = i + 1
+
+
+def run_whole_dataset():
+    """
+    Run analyses over the entire dataset
+    """
+    import pyspark.sql.functions as sqlf
+    from datetime import datetime as dt
+
+    stations = mkstations('data/ghcnd-stations.csv')
 
     # Hottest and coldest day and corresponding weather stations in the
     # entire dataset
