@@ -13,8 +13,12 @@ and elements TMAX, TMIN.
 For the Global Historical Climatology Network (GHCN) [weather data][ghcn]:
 
 ```bash
+# change into the directory where this repo was cloned
+cd /dir/where/you/cloned/this/repo
+
 mkdir data  # if it doesn't exist
 cd data
+
 for i in `seq 2000 2016`; do
     wget https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/by_year/${i}.csv.gz
     gzip -cd ${i}.csv.gz  | grep -e TMIN -e TMAX | grep ^US > ${i}.csv
