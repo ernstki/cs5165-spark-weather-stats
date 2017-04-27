@@ -6,7 +6,7 @@ from pyspark.sql import SQLContext, Row
 sc = SparkContext.getOrCreate() #appName='weatherStats')
 sqlc = SQLContext(sc)
 
-include_years = range(2000, 2017)  # all data from 2000-2016
+available_years = range(2000, 2017)  # all data from 2000-2016
 
 
 def mkdf(filename):
@@ -67,7 +67,7 @@ def getcity(stations, sta, raw_json=False):
         return ', '.join(a.split(', ')[-3:-1])
 
 
-def run(years=include_years):
+def run(years=available_years):
     """
     Run analyses on individual years in sequence
     """
@@ -80,7 +80,7 @@ def run(years=include_years):
         years = [years]
 
     for year in years:
-        if not year in include_years:
+        if not year in available_years:
             raise RuntimeError('Sorry, %s is not available in the dataset.' % year)
 
         df = mkdf('data/%s.csv' % year)
