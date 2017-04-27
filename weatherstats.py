@@ -25,12 +25,13 @@ def mkdf(filename):
 
 def mkstations(filename):
     """
-    Read in comma-separated data with station identifiers and return a PySpark
-    DataFrame
+    Read in comma-separated data with station lat/long coordinates and return a
+    PySpark DataFrame
 
-    Source: https://mesonet.agron.iastate.edu/sites/networks.php?network=_ALL_&format=csv&nohtml=on
+    Source: ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt
+    (with some post-procession; see README.md)
 
-    Headers: stid,station_name,lat,lon,elev,begints,iem_network
+    Columns: stid,lat,lon
     """
     raw = sc.textFile(filename)
     data = raw.map(lambda x: x.split(','))
@@ -72,7 +73,7 @@ def run():
     """
     import pyspark.sql.functions as sqlf
 
-    stations = mkstations('data/ghcnd-stations.csv')
+    stations = mkstations('data/stations.csv')
 
     for col in ['begints', 'elev', 'iem_network']: # station_name, stid
         stations = stations.drop(col)
@@ -131,7 +132,7 @@ def run_whole_dataset():
     import pyspark.sql.functions as sqlf
     from datetime import datetime as dt
 
-    stations = mkstations('data/ghcnd-stations.csv')
+    stations = mkstations('data/stations.csv')
 
     # Hottest and coldest day and corresponding weather stations in the
     # entire dataset

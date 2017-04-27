@@ -30,7 +30,7 @@ For the GHCN station metadata (latitude and longitude):
 ```bash
 cd data
 wget ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt
-awk 'OFS="," {print $1, $2, $3}' ghcnd-stations.txt > ghcnd-stations.csv
+awk 'OFS="," {print $1, $2, $3}' ghcnd-stations.txt > stations.csv
 ```
 
 The Google Maps geocoding API is used to get the actual city and state name
