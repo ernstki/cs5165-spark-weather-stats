@@ -1,12 +1,12 @@
-# Project 2 (FINAL) : BigData Analysis Project - Weather
+# Project 2 (FINAL) : Big Data Analysis Project - Weather
 
 **Due**: April 24 2017 @ 11:55pm
 
-This project will have you perform Data Analysis and processing using
-MapReduce / Apache Spark. The project will use the weather dataset from
+This project will have you perform data analysis and processing using
+Hadoop MapReduce or Apache Spark. The project will use the weather dataset from
 <https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/by_year/>. This project will
-use only 16 years of data (2000 - 2016) for all the stations starting with US
-and elements TMAX, TMIN. 
+use only 16 years of data (2000-2016) for all the stations starting with "US"
+and the elements TMAX and TMIN. 
 
 ## Creation of datasets
 
@@ -64,7 +64,7 @@ NOAA/NCDC’s Multinetwork Metadata System (MMS).
 Build a Hadoop map/reduce or Apache Spark analysis that yields the following:
 
 * Average TMIN, TMAX for each year excluding abnormalities or missing data
-* Maximum TMAX, Minimum TMIN for each year excluding abnormalities or missing
+* Maximum TMAX, minimum TMIN for each year excluding abnormalities or missing
   data
 * 5 hottest, 5 coldest weather stations for each year excluding abnormalities
   or missing data
