@@ -67,7 +67,7 @@ def getcity(stations, sta, raw_json=False):
         return ', '.join(a.split(', ')[-3:-1])
 
 
-def run():
+def run(years=include_years):
     """
     Run analyses on individual years in sequence
     """
@@ -75,11 +75,15 @@ def run():
 
     stations = mkstations('data/stations.csv')
 
-    for col in ['begints', 'elev', 'iem_network']: # station_name, stid
-        stations = stations.drop(col)
+    # allow passing a single year or a list of them
+    if not type(years) is list:
+        years = [years]
 
-    for year in include_years:
-        df = mkdf('data/%s.csv' % str(year))
+    for year in years:
+        if not year in include_years:
+            raise RuntimeError('Sorry, %s is not available in the dataset.' % year)
+
+        df = mkdf('data/%s.csv' % year)
 
         print("\n%s\n====\n" % year)
 
@@ -92,36 +96,31 @@ def run():
         print('Avg max temp = %0.1f deg C' % (r['avg(degc)'] / 10.0))
 
         # Five hottest stations (on average)
-        # join with 'stations' table (adds lat, lon, station_name, stid)
         fivehot = df.filter(df.meas=='TMAX') \
                     .groupBy(df.sta) \
                     .agg(sqlf.avg('degc')) \
-                    .join(stations, df.sta==stations.stid) \
                     .sort(sqlf.desc('avg(degc)')) \
                     .limit(5).collect()
-
         print()
         i = 1
         for s in fivehot:
             t = float(s['avg(degc)']) / 10.0
             print('Hottest station #%s: %s (%s) - %0.1f deg C'
-                  % (i, s.sta, getcity(stations,s.sta), t))
+                  % (i, s.sta, getcity(stations, s.sta), t))
             i = i + 1
 
         # Five coldest stations (on average)
         fivecold = df.filter(df.meas=='TMIN') \
                      .groupBy(df.sta) \
                      .agg(sqlf.avg('degc')) \
-                     .join(stations, df.sta==stations.stid) \
                      .sort(sqlf.asc('avg(degc)')) \
                      .limit(5).collect()
-
         print()
         i = 1
         for s in fivecold:
             t = float(s['avg(degc)']) / 10.0
             print('Coldest station #%s: %s (%s) - %0.1f deg C'
-                  % (i, s.sta, getcity(stations,s.sta), t))
+                  % (i, s.sta, getcity(stations, s.sta), t))
             i = i + 1
 
 
